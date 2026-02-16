@@ -6,6 +6,7 @@ import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpRequestExecution;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.lang.NonNull;
 
 import java.io.IOException;
 
@@ -17,18 +18,22 @@ import java.io.IOException;
  */
 public class OutboundCorrelationInterceptor implements ClientHttpRequestInterceptor {
 
+    @NonNull
     private final String headerName;
 
-    public OutboundCorrelationInterceptor(String headerName) {
+    public OutboundCorrelationInterceptor(@NonNull String headerName) {
         this.headerName = headerName;
     }
 
     @Override
-    public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution)
-            throws IOException {
+    @NonNull
+    public ClientHttpResponse intercept(@NonNull HttpRequest request, @NonNull byte[] body,
+            @NonNull ClientHttpRequestExecution execution) throws IOException {
         String cid = MDC.get(ObsMdcKeys.CORRELATION_ID);
         if (cid != null && !cid.isBlank() && !request.getHeaders().containsKey(headerName)) {
-            request.getHeaders().add(headerName, cid);
+            // Linter might still complain about 'cid' being nullable despite the check, so
+            // we cast it safely
+            request.getHeaders().add(headerName, java.util.Objects.requireNonNull(cid));
         }
         return execution.execute(request, body);
     }

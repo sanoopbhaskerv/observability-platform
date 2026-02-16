@@ -1,6 +1,5 @@
 package com.yourorg.observability.starter.tracing;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import org.junit.jupiter.api.Test;

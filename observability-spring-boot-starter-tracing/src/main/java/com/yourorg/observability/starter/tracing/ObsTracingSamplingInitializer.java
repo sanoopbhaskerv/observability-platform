@@ -30,6 +30,7 @@ public class ObsTracingSamplingInitializer implements EnvironmentPostProcessor {
 
         environment.getPropertySources().addLast(
                 new MapPropertySource("obs-tracing-defaults",
-                        Map.of("management.tracing.sampling.probability", sampleRate)));
+                        java.util.Objects.requireNonNull(Map.of("management.tracing.sampling.probability",
+                                java.util.Objects.requireNonNull(sampleRate)))));
     }
 }

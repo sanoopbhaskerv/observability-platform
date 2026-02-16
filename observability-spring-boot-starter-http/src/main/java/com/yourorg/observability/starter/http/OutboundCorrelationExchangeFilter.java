@@ -31,7 +31,7 @@ public class OutboundCorrelationExchangeFilter implements ExchangeFilterFunction
         String cid = MDC.get(ObsMdcKeys.CORRELATION_ID);
         if (cid != null && !cid.isBlank() && !request.headers().containsKey(headerName)) {
             ClientRequest mutated = ClientRequest.from(request)
-                    .header(headerName, cid)
+                    .header(headerName, java.util.Objects.requireNonNull(cid))
                     .build();
             return next.exchange(mutated);
         }
