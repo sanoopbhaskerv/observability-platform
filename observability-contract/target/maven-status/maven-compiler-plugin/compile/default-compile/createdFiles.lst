@@ -1,0 +1,3 @@
+com/yourorg/observability/contract/ObsHeaders.class
+com/yourorg/observability/contract/CorrelationId.class
+com/yourorg/observability/contract/ObsMdcKeys.class

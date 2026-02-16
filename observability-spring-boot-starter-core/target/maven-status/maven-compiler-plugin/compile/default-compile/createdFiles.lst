@@ -1,0 +1,4 @@
+com/yourorg/observability/starter/core/CorrelationIdFilter.class
+com/yourorg/observability/starter/core/ObsCoreProperties.class
+com/yourorg/observability/starter/core/ObsCoreProperties$Correlation.class
+com/yourorg/observability/starter/core/ObservabilityCoreAutoConfiguration.class

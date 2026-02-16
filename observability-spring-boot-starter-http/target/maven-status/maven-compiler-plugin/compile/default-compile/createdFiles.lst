@@ -1,0 +1,3 @@
+com/yourorg/observability/starter/http/ObservabilityHttpAutoConfiguration.class
+com/yourorg/observability/starter/http/OutboundCorrelationInterceptor.class
+com/yourorg/observability/starter/http/ObsHttpProperties.class

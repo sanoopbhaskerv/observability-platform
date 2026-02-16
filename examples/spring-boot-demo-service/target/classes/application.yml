@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+obs:
+  enabled: true
+  correlation:
+    enabled: true
+
+  traces:
+    enabled: true
+
+  metrics:
+    enabled: false # flip true when ready
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  tracing:
+    enabled: true
+  otlp:
+    metrics:
+      export:
+        enabled: false # No local OTel Collector; flip true in prod
