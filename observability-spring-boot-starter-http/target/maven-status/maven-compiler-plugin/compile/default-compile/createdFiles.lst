@@ -1,4 +1,5 @@
 com/yourorg/observability/starter/http/ObservabilityHttpAutoConfiguration.class
 com/yourorg/observability/starter/http/OutboundCorrelationExchangeFilter.class
+com/yourorg/observability/starter/http/ObservabilityWebClientAutoConfiguration.class
 com/yourorg/observability/starter/http/OutboundCorrelationInterceptor.class
 com/yourorg/observability/starter/http/ObsHttpProperties.class
