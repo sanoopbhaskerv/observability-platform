@@ -1,2 +1,3 @@
 com/yourorg/observability/starter/tracing/ObsTracingProperties.class
+com/yourorg/observability/starter/tracing/ObsTracingSamplingInitializer.class
 com/yourorg/observability/starter/tracing/ObservabilityTracingAutoConfiguration.class

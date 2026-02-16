@@ -5,20 +5,41 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
 
 /**
- * This module intentionally keeps code-light:
- * - Boot + Micrometer auto-config provides the Tracer.
- * - Export is controlled via OTEL_* env vars and/or spring
- * management.tracing.*.
- * Your policy: treat tracing as a capability toggle, not vendor binding.
+ * Tracing module — adds org-standard customizations on top of Spring Boot's
+ * built-in Micrometer + OTel auto-configuration.
+ *
+ * <p>
+ * Spring Boot already provides the {@link Tracer} and export pipeline.
+ * This module adds:
+ * </p>
+ * <ul>
+ * <li>Configurable head-sampling via {@code obs.traces.sample-rate} (default
+ * 0.05)</li>
+ * <li>Feature toggle via {@code obs.traces.enabled}</li>
+ * </ul>
+ *
+ * <p>
+ * For production, prefer tail-sampling at the OTel Collector level.
+ * </p>
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ObsTracingProperties.class)
 @ConditionalOnProperty(prefix = "obs.traces", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnClass(Tracer.class)
 public class ObservabilityTracingAutoConfiguration {
-    // Intentionally empty; existence of this module is the adoption “knob”.
-    // You can add advanced customization here later (span naming, attribute
-    // allowlists, etc.).
+
+    /**
+     * Sets the head-sampling probability via
+     * {@code management.tracing.sampling.probability}.
+     * This bridges the org-level config key ({@code obs.traces.sample-rate}) to
+     * Spring Boot's
+     * native tracing property, keeping a single config surface for consumers.
+     */
+    @Bean
+    public ObsTracingSamplingInitializer obsTracingSamplingInitializer(ObsTracingProperties props) {
+        return new ObsTracingSamplingInitializer(props.getSampleRate());
+    }
 }

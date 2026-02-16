@@ -10,8 +10,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
 /**
- * Minimal outbound correlation propagation for RestTemplate users.
- * You can extend this later for RestClient/WebClient customizers.
+ * Outbound correlation propagation for both RestTemplate and WebClient.
+ *
+ * <ul>
+ * <li>RestTemplate — always available (spring-web)</li>
+ * <li>WebClient — activates only when spring-webflux is on the classpath</li>
+ * </ul>
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ObsHttpProperties.class)
@@ -24,5 +28,16 @@ public class ObservabilityHttpAutoConfiguration {
     public RestTemplateCustomizer observabilityRestTemplateCustomizer() {
         return restTemplate -> restTemplate.getInterceptors()
                 .add(new OutboundCorrelationInterceptor(ObsHeaders.CORRELATION_ID));
+    }
+
+    /**
+     * WebClient customizer — only activates when spring-webflux is on the
+     * classpath.
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.web.reactive.function.client.WebClient")
+    @ConditionalOnProperty(prefix = "obs.http", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public OutboundCorrelationExchangeFilter observabilityWebClientFilter() {
+        return new OutboundCorrelationExchangeFilter(ObsHeaders.CORRELATION_ID);
     }
 }
