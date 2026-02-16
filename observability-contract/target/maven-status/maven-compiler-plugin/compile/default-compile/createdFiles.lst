@@ -1,3 +1,5 @@
 com/yourorg/observability/contract/ObsHeaders.class
 com/yourorg/observability/contract/CorrelationId.class
 com/yourorg/observability/contract/ObsMdcKeys.class
+com/yourorg/observability/contract/ObsMetricPolicy.class
+com/yourorg/observability/contract/ObsLogFields.class

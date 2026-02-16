@@ -33,5 +33,10 @@
       <artifactId>observability-spring-boot-starter-metrics</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>com.yourorg.observability</groupId>
+      <artifactId>observability-spring-boot-starter-logging</artifactId>
+      <version>${project.version}</version>
+    </dependency>
   </dependencies>
 </project>

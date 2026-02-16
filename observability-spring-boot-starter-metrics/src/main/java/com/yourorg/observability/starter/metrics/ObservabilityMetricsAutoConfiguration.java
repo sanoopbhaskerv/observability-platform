@@ -1,6 +1,11 @@
 package com.yourorg.observability.starter.metrics;
 
+import com.yourorg.observability.contract.ObsMetricPolicy;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
+import io.micrometer.core.instrument.config.MeterFilter;
+import io.micrometer.core.instrument.config.MeterFilterReply;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.metrics.MeterRegistryCustomizer;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -10,8 +15,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 
 /**
- * Metrics module — adds org-standard common tags on top of Spring Boot's
- * built-in OTLP metrics auto-configuration.
+ * Metrics module — adds org-standard common tags and metric governance
+ * on top of Spring Boot's built-in OTLP metrics auto-configuration.
  *
  * <p>
  * Spring Boot 3.x already auto-configures {@code OtlpMeterRegistry} via
@@ -20,14 +25,11 @@ import org.springframework.context.annotation.Bean;
  * <ul>
  * <li>Common tags ({@code service.name}, {@code env}) applied to all
  * meters</li>
+ * <li>Metric governance via {@link ObsMetricPolicy} (deny-list
+ * enforcement)</li>
  * <li>Feature toggle via {@code obs.metrics.enabled} (default: false /
  * opt-in)</li>
  * </ul>
- *
- * <p>
- * Configure the OTLP endpoint via Spring Boot's native property:
- * {@code management.otlp.metrics.export.url=http://collector:4318/v1/metrics}
- * </p>
  */
 @AutoConfiguration
 @EnableConfigurationProperties(ObsMetricsProperties.class)
@@ -36,8 +38,7 @@ import org.springframework.context.annotation.Bean;
 public class ObservabilityMetricsAutoConfiguration {
 
     /**
-     * Adds org-standard common tags to every meter. These tags enable consistent
-     * filtering/grouping across services in Grafana dashboards.
+     * Adds org-standard common tags to every meter.
      */
     @Bean
     public MeterRegistryCustomizer<MeterRegistry> obsCommonTagsCustomizer(
@@ -47,5 +48,41 @@ public class ObservabilityMetricsAutoConfiguration {
                 .commonTags(
                         "service.name", appName,
                         "env", env);
+    }
+
+    /**
+     * Enforces the org's metric governance policy ({@link ObsMetricPolicy}).
+     *
+     * <ul>
+     * <li>Denies metrics with forbidden tag keys (userId, sessionId,
+     * requestId)</li>
+     * <li>Denies metrics whose names don't match allowed prefixes</li>
+     * </ul>
+     *
+     * <p>
+     * This is the app-layer first line of defense. The Collector provides
+     * the second layer (defense in depth).
+     * </p>
+     */
+    @Bean
+    public MeterFilter obsMetricPolicyFilter() {
+        return new MeterFilter() {
+            @Override
+            public MeterFilterReply accept(Meter.Id id) {
+                // Deny metrics with forbidden tag keys
+                for (Tag tag : id.getTags()) {
+                    if (ObsMetricPolicy.isForbiddenTag(tag.getKey())) {
+                        return MeterFilterReply.DENY;
+                    }
+                }
+
+                // Deny metrics not matching allowed prefixes
+                if (!ObsMetricPolicy.isAllowed(id.getName())) {
+                    return MeterFilterReply.DENY;
+                }
+
+                return MeterFilterReply.NEUTRAL;
+            }
+        };
     }
 }

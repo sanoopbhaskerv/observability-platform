@@ -16,6 +16,7 @@
     <module>observability-spring-boot-starter-http</module>
     <module>observability-spring-boot-starter-tracing</module>
     <module>observability-spring-boot-starter-metrics</module>
+    <module>observability-spring-boot-starter-logging</module>
     <module>observability-spring-boot-starter</module>
     <module>examples/spring-boot-demo-service</module>
   </modules>

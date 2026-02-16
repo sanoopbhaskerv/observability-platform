@@ -1,3 +1,6 @@
 com/yourorg/observability/starter/tracing/ObsTracingProperties.class
-com/yourorg/observability/starter/tracing/ObsTracingSamplingInitializer.class
 com/yourorg/observability/starter/tracing/ObservabilityTracingAutoConfiguration.class
+com/yourorg/observability/starter/tracing/ObsHealthCheckTracingFilter.class
+com/yourorg/observability/starter/tracing/ObsTracingSamplingInitializer.class
+com/yourorg/observability/starter/tracing/ObsTracingProperties$NoiseFilter.class
+com/yourorg/observability/starter/tracing/CorrelationIdSpanEnricher.class
