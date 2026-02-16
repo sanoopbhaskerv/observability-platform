@@ -113,10 +113,6 @@ exporters:
     tls:
       insecure: true
 
-  # --- Debug exporter (dev only, remove in prod) ---
-  debug:
-    verbosity: basic
-
 service:
   telemetry:
     logs:

@@ -65,7 +65,7 @@ public class ObservabilityMetricsAutoConfiguration {
      * </p>
      */
     @Bean
-    public MeterFilter obsMetricPolicyFilter() {
+    public MeterFilter obsMetricPolicyFilter(ObsMetricsProperties props) {
         return new MeterFilter() {
             @Override
             public MeterFilterReply accept(Meter.Id id) {
@@ -76,12 +76,17 @@ public class ObservabilityMetricsAutoConfiguration {
                     }
                 }
 
-                // Deny metrics not matching allowed prefixes
-                if (!ObsMetricPolicy.isAllowed(id.getName())) {
-                    return MeterFilterReply.DENY;
+                // Deny metrics not matching allowed prefixes (from contract OR config)
+                String name = id.getName();
+                if (ObsMetricPolicy.isAllowed(name)) {
+                    return MeterFilterReply.NEUTRAL;
                 }
 
-                return MeterFilterReply.NEUTRAL;
+                if (props.getAdditionalAllowedPrefixes().stream().anyMatch(name::startsWith)) {
+                    return MeterFilterReply.NEUTRAL;
+                }
+
+                return MeterFilterReply.DENY;
             }
         };
     }

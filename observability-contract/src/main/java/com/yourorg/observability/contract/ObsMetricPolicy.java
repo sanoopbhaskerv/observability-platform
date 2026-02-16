@@ -33,7 +33,15 @@ public final class ObsMetricPolicy {
     public static final List<String> ALLOWED_PREFIXES = List.of(
             "http.server.requests",
             "jvm.",
+            "process.",
+            "system.",
+            "tomcat.",
+            "hikaricp.",
             "db.pool.",
+            "logback.",
+            "spring.",
+            "resilience4j.",
+            "cache.",
             "custom.business.");
 
     /**

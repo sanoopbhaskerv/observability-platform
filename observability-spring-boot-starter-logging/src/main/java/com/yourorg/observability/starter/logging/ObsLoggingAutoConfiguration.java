@@ -4,6 +4,7 @@ import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.ConsoleAppender;
+import com.yourorg.observability.contract.ObsLogFields;
 import jakarta.annotation.PostConstruct;
 import net.logstash.logback.encoder.LogstashEncoder;
 import net.logstash.logback.fieldnames.LogstashFieldNames;
@@ -58,47 +59,61 @@ public class ObsLoggingAutoConfiguration {
 
     @PostConstruct
     public void configureStructuredLogging() {
-        if (!"json".equalsIgnoreCase(props.getFormat())) {
+        if (props.getFormat() != ObsLoggingProperties.LogFormat.JSON) {
             return; // Keep default text format for development
         }
 
-        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-        Logger rootLogger = context.getLogger(Logger.ROOT_LOGGER_NAME);
+        try {
+            LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+            Logger rootLogger = context.getLogger(Logger.ROOT_LOGGER_NAME);
 
-        // Create JSON encoder with org-standard field names
-        LogstashEncoder encoder = new LogstashEncoder();
-        encoder.setContext(context);
+            // Create JSON encoder with org-standard field names
+            LogstashEncoder encoder = new LogstashEncoder();
+            encoder.setContext(context);
 
-        // Map standard fields to match ObsLogFields contract
-        LogstashFieldNames fieldNames = new LogstashFieldNames();
-        fieldNames.setTimestamp("timestamp");
-        fieldNames.setLevel("level");
-        fieldNames.setLogger("logger");
-        fieldNames.setThread("thread");
-        fieldNames.setMessage("message");
-        fieldNames.setStackTrace("stack_trace");
-        encoder.setFieldNames(fieldNames);
+            // Map standard fields to match ObsLogFields contract
+            LogstashFieldNames fieldNames = new LogstashFieldNames();
+            fieldNames.setTimestamp(ObsLogFields.TIMESTAMP);
+            fieldNames.setLevel(ObsLogFields.LEVEL);
+            fieldNames.setLogger("logger");
+            fieldNames.setThread("thread");
+            fieldNames.setMessage("message");
+            fieldNames.setStackTrace("stack_trace");
+            encoder.setFieldNames(fieldNames);
 
-        // Inject application metadata as custom fields
-        encoder.setCustomFields(String.format(
-                "{\"service\":\"%s\",\"env\":\"%s\",\"version\":\"%s\"}",
-                serviceName, env, version));
+            // Inject application metadata as custom fields using Jackson for safety
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            com.fasterxml.jackson.databind.node.ObjectNode node = mapper.createObjectNode();
+            node.put(ObsLogFields.SERVICE, serviceName);
+            node.put(ObsLogFields.ENV, env);
+            node.put(ObsLogFields.VERSION, version);
+            encoder.setCustomFields(node.toString());
 
-        // Include MDC fields (correlation_id, trace_id, span_id) automatically
-        encoder.setIncludeMdcKeyNames(java.util.List.of(
-                "correlation_id", "trace_id", "span_id",
-                "http.method", "http.route", "http.status_code", "duration_ms"));
+            // Include MDC fields (correlation_id, trace_id, span_id) automatically
+            encoder.setIncludeMdcKeyNames(java.util.List.of(
+                    ObsLogFields.CORRELATION_ID, ObsLogFields.TRACE_ID, ObsLogFields.SPAN_ID,
+                    ObsLogFields.HTTP_METHOD, ObsLogFields.HTTP_ROUTE, ObsLogFields.HTTP_STATUS_CODE, ObsLogFields.DURATION_MS));
 
-        encoder.start();
+            encoder.start();
 
-        // Replace root logger's appender with structured JSON
-        ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
-        appender.setContext(context);
-        appender.setEncoder(encoder);
-        appender.setName("OBS_JSON_CONSOLE");
-        appender.start();
+            // Replace root logger's appender with structured JSON
+            ConsoleAppender<ILoggingEvent> appender = new ConsoleAppender<>();
+            appender.setContext(context);
+            appender.setEncoder(encoder);
+            appender.setName("OBS_JSON_CONSOLE");
+            appender.start();
 
-        rootLogger.detachAndStopAllAppenders();
-        rootLogger.addAppender(appender);
+            // Safety check: Only switch if the new appender is actually working
+            if (appender.isStarted()) {
+                rootLogger.detachAndStopAllAppenders();
+                rootLogger.addAppender(appender);
+            } else {
+                System.err.println("CRITICAL: Failed to start JSON console appender. Keeping default logging.");
+            }
+        } catch (Exception e) {
+            // Fallback: print error to stderr and don't touch existing functionality
+            System.err.println("CRITICAL: Failed to configure structured logging: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

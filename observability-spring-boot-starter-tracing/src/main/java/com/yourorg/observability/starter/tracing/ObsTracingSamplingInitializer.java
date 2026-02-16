@@ -18,18 +18,18 @@ import java.util.Map;
  */
 public class ObsTracingSamplingInitializer implements EnvironmentPostProcessor {
 
-    private final double sampleRate;
-
-    public ObsTracingSamplingInitializer(double sampleRate) {
-        this.sampleRate = sampleRate;
-    }
-
     @Override
     public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
-        if (!environment.containsProperty("management.tracing.sampling.probability")) {
-            environment.getPropertySources().addLast(
-                    new MapPropertySource("obs-tracing-defaults",
-                            Map.of("management.tracing.sampling.probability", sampleRate)));
+        // Only set default if not already set by use
+        if (environment.containsProperty("management.tracing.sampling.probability")) {
+            return;
         }
+
+        // Bridge obs.traces.sample-rate (default 0.05) to Spring Boot's property
+        Double sampleRate = environment.getProperty("obs.traces.sample-rate", Double.class, 0.05);
+
+        environment.getPropertySources().addLast(
+                new MapPropertySource("obs-tracing-defaults",
+                        Map.of("management.tracing.sampling.probability", sampleRate)));
     }
 }

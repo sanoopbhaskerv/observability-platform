@@ -10,15 +10,19 @@ public class ObsLoggingProperties {
      */
     private boolean enabled = true;
 
+    public enum LogFormat {
+        JSON, TEXT
+    }
+
     /**
      * Log output format: "json" for structured JSON (production), "text" for
      * human-readable console output (development).
      */
-    private String format = "json";
+    private LogFormat format = LogFormat.JSON;
 
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
 
-    public String getFormat() { return format; }
-    public void setFormat(String format) { this.format = format; }
+    public LogFormat getFormat() { return format; }
+    public void setFormat(LogFormat format) { this.format = format; }
 }

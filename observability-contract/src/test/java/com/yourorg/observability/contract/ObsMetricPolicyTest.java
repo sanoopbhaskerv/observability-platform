@@ -11,12 +11,13 @@ class ObsMetricPolicyTest {
         assertThat(ObsMetricPolicy.isAllowed("http.server.requests")).isTrue();
         assertThat(ObsMetricPolicy.isAllowed("jvm.memory.used")).isTrue();
         assertThat(ObsMetricPolicy.isAllowed("db.pool.active")).isTrue();
+        assertThat(ObsMetricPolicy.isAllowed("system.cpu.usage")).isTrue();
         assertThat(ObsMetricPolicy.isAllowed("custom.business.orders")).isTrue();
     }
 
     @Test
     void unallowedPrefixesDenied() {
-        assertThat(ObsMetricPolicy.isAllowed("system.cpu.usage")).isFalse();
+        assertThat(ObsMetricPolicy.isAllowed("crypto.miner.hashrate")).isFalse();
         assertThat(ObsMetricPolicy.isAllowed("random.metric")).isFalse();
         assertThat(ObsMetricPolicy.isAllowed(null)).isFalse();
     }

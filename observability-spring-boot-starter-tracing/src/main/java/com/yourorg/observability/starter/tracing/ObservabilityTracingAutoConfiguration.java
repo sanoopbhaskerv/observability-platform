@@ -37,42 +37,19 @@ import java.util.Set;
 public class ObservabilityTracingAutoConfiguration {
 
     /**
-     * Sets the head-sampling probability via
-     * {@code management.tracing.sampling.probability}.
-     * This bridges the org-level config key ({@code obs.traces.sample-rate}) to
-     * Spring Boot's
-     * native tracing property, keeping a single config surface for consumers.
-     */
-    @Bean
-    public ObsTracingSamplingInitializer obsTracingSamplingInitializer(ObsTracingProperties props) {
-        return new ObsTracingSamplingInitializer(props.getSampleRate());
-    }
-
-    /**
-     * Enriches every OTel span with {@code correlation_id} from MDC,
-     * enabling cross-signal queries (logs ↔ traces by correlation_id).
-     */
-    @Bean
-    @ConditionalOnClass(name = "io.opentelemetry.sdk.trace.SpanProcessor")
-    public CorrelationIdSpanEnricher correlationIdSpanEnricher() {
-        return new CorrelationIdSpanEnricher();
-    }
-
-    /**
      * Suppresses tracing observations for noise endpoints
      * (health checks, ping, static assets).
      */
     @Bean
     @ConditionalOnClass(ObservationPredicate.class)
-    public ObservationPredicate obsNoiseFilterPredicate(ObsTracingProperties props) {
-        Set<String> excluded = props.getNoiseFilter().getExcludedPaths();
+    public ObservationPredicate obsNoiseFilterPredicate(ObsHealthCheckTracingFilter filter) {
         return (name, context) -> {
             if (context instanceof io.micrometer.observation.Observation.Context) {
                 try {
                     String uri = context.getLowCardinalityKeyValue("uri").getValue();
-                    return excluded.stream().noneMatch(uri::startsWith);
+                    return !filter.isExcluded(uri);
                 } catch (Exception e) {
-                    // KeyValue not found — not an HTTP observation, allow it
+                    // KeyValue not found (e.g. non-HTTP observation) or other issue
                     return true;
                 }
             }
