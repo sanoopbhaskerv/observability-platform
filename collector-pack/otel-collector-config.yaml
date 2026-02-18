@@ -1,0 +1,140 @@
+# Observability Platform — OTel Collector Golden Path Config
+#
+# This is the org-standard "collector-pack" reference configuration.
+# Deploy this alongside your services as a sidecar or DaemonSet.
+#
+# Architecture:
+#   App (OTLP) → Collector Sidecar → Backend (Grafana/Tempo/Mimir/Loki)
+#
+# The Collector provides the second layer of defense (defense in depth):
+# - Tail sampling (keep errors + slow traces, sample baseline)
+# - Noise filtering (drop health checks, actuator endpoints)
+# - Attribute normalization (enforce resource attributes)
+# - PII scrubbing (redact known patterns)
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  # --- Memory limiter (safety net) ---
+  memory_limiter:
+    check_interval: 5s
+    limit_mib: 512
+    spike_limit_mib: 128
+
+  # --- Batch processor (reduces export overhead) ---
+  batch:
+    send_batch_size: 1024
+    timeout: 5s
+
+  # --- Noise filter: drop health check and actuator spans ---
+  filter/noise:
+    error_mode: ignore
+    traces:
+      span:
+        - 'attributes["http.route"] == "/actuator/health"'
+        - 'attributes["http.route"] == "/actuator/info"'
+        - 'attributes["http.route"] == "/ping"'
+        - 'attributes["http.route"] == "/favicon.ico"'
+        - 'attributes["http.target"] == "/actuator/health"'
+        - 'attributes["http.target"] == "/actuator/info"'
+        - 'attributes["http.target"] == "/ping"'
+
+  # --- Tail sampling: keep errors and slow traces, baseline 5% ---
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 50000
+    expected_new_traces_per_sec: 100
+    policies:
+      # Always keep error traces
+      - name: errors-policy
+        type: status_code
+        status_code:
+          status_codes:
+            - ERROR
+      # Always keep slow traces (> 500ms)
+      - name: latency-policy
+        type: latency
+        latency:
+          threshold_ms: 500
+      # Always keep traces with 5xx HTTP status
+      - name: http-5xx-policy
+        type: string_attribute
+        string_attribute:
+          key: http.status_code
+          values:
+            - "500"
+            - "501"
+            - "502"
+            - "503"
+            - "504"
+      # Baseline: sample 5% of healthy traffic
+      - name: baseline-policy
+        type: probabilistic
+        probabilistic:
+          sampling_percentage: 5
+
+  # --- Attribute normalization: enforce org-standard resource attributes ---
+  resource:
+    attributes:
+      - key: deployment.environment
+        from_attribute: env
+        action: upsert
+      - key: service.version
+        from_attribute: version
+        action: upsert
+
+  # --- PII scrubbing: redact known patterns ---
+  # NOTE: For production, consider using the `redaction` processor
+  # with regex patterns for emails, SSNs, credit cards, etc.
+  # This is a placeholder showing the pattern.
+  attributes/pii:
+    actions:
+      - key: http.url
+        action: hash # Hash full URLs to prevent PII leakage in query params
+      - key: db.statement
+        action: hash # Hash SQL statements to prevent PII leakage
+
+exporters:
+  # --- OTLP exporter to your backend ---
+  # Replace with your actual backend endpoint
+  otlp/traces:
+    endpoint: "tempo:4317"
+    tls:
+      insecure: true
+
+  otlp/metrics:
+    endpoint: "mimir:4317"
+    tls:
+      insecure: true
+
+service:
+  telemetry:
+    logs:
+      level: info
+    metrics:
+      address: 0.0.0.0:8888
+
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors:
+        [
+          memory_limiter,
+          filter/noise,
+          tail_sampling,
+          resource,
+          attributes/pii,
+          batch,
+        ]
+      exporters: [otlp/traces]
+
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource, batch]
+      exporters: [otlp/metrics]

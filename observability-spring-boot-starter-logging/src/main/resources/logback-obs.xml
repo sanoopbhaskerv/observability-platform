@@ -1,0 +1,36 @@
+<!--
+  Reusable Logback configuration fragment for structured JSON logging.
+  Include this in your application's logback-spring.xml if you want to
+  customize the logging configuration beyond the auto-configured defaults.
+
+  Usage in your logback-spring.xml:
+    <configuration>
+      <include resource="logback-obs.xml"/>
+    </configuration>
+
+  The auto-configuration (ObsLoggingAutoConfiguration) handles this
+  programmatically, so including this file is OPTIONAL.
+-->
+<included>
+    <appender name="OBS_JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <fieldNames>
+                <timestamp>timestamp</timestamp>
+                <level>level</level>
+                <logger>logger</logger>
+                <thread>thread</thread>
+                <message>message</message>
+                <stackTrace>stack_trace</stackTrace>
+            </fieldNames>
+
+            <!-- MDC keys matching ObsLogFields contract -->
+            <includeMdcKeyName>correlation_id</includeMdcKeyName>
+            <includeMdcKeyName>trace_id</includeMdcKeyName>
+            <includeMdcKeyName>span_id</includeMdcKeyName>
+            <includeMdcKeyName>http.method</includeMdcKeyName>
+            <includeMdcKeyName>http.route</includeMdcKeyName>
+            <includeMdcKeyName>http.status_code</includeMdcKeyName>
+            <includeMdcKeyName>duration_ms</includeMdcKeyName>
+        </encoder>
+    </appender>
+</included>
