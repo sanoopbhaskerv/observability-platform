@@ -1,5 +1,0 @@
-/Users/sanoopbhaskerv/workspace/observability_platform/observability-platform-maven-template/observability-contract/src/main/java/com/yourorg/observability/contract/ObsMdcKeys.java
-/Users/sanoopbhaskerv/workspace/observability_platform/observability-platform-maven-template/observability-contract/src/main/java/com/yourorg/observability/contract/ObsLogFields.java
-/Users/sanoopbhaskerv/workspace/observability_platform/observability-platform-maven-template/observability-contract/src/main/java/com/yourorg/observability/contract/CorrelationId.java
-/Users/sanoopbhaskerv/workspace/observability_platform/observability-platform-maven-template/observability-contract/src/main/java/com/yourorg/observability/contract/ObsMetricPolicy.java
-/Users/sanoopbhaskerv/workspace/observability_platform/observability-platform-maven-template/observability-contract/src/main/java/com/yourorg/observability/contract/ObsHeaders.java

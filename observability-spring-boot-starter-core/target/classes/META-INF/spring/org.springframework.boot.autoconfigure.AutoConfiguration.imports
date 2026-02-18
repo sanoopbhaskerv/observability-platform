@@ -1,2 +1,0 @@
-com.yourorg.observability.starter.core.ObservabilityCoreAutoConfiguration
-com.yourorg.observability.starter.core.MdcContextPropagationAutoConfiguration

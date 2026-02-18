@@ -2,6 +2,8 @@
 # Maven
 target/
 *.log
+*.jar
+!maven-wrapper.jar
 
 # IntelliJ IDEA
 .idea/
