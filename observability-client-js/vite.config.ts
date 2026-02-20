@@ -14,7 +14,14 @@ export default defineConfig({
         rollupOptions: {
             // make sure to externalize deps that shouldn't be bundled
             // into your library
-            external: [],
+            external: [
+                '@opentelemetry/sdk-trace-web',
+                '@opentelemetry/sdk-trace-base',
+                '@opentelemetry/instrumentation',
+                '@opentelemetry/instrumentation-fetch',
+                '@opentelemetry/exporter-trace-otlp-http',
+                '@opentelemetry/api',
+            ],
             output: {
                 // Provide global variables to use in the UMD build
                 // for externalized deps

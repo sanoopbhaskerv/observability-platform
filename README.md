@@ -142,11 +142,14 @@ Automatic **inbound request correlation**. Registers a highest-precedence servle
 
 ### `observability-spring-boot-starter-metrics`
 
-**OTLP metrics export** via Micrometer's `OtlpMeterRegistry`. Deliberately gated behind `obs.metrics.enabled=true` (opt-in) for cardinality and cost governance.
+**Metrics export** via Micrometer. Supports multiple export strategies:
+- **OTLP** (Push, Default) — `micrometer-registry-otlp`
+- **Prometheus** (Pull) — `micrometer-registry-prometheus`
+- **Dynatrace** (Native, Optional) — `micrometer-registry-dynatrace`
 
 | Class | Purpose |
 |---|---|
-| `ObservabilityMetricsAutoConfiguration` | Creates `OtlpConfig` + `OtlpMeterRegistry` beans |
+| `ObservabilityMetricsAutoConfiguration` | Configures MeterRegistries based on enabled properties |
 | `ObsMetricsProperties` | Configures `obs.metrics.enabled` (default: **false**) |
 
 ### `observability-spring-boot-starter` (Umbrella)
@@ -322,14 +325,35 @@ obs:
     # Enable/disable OTLP metrics export (opt-in for cost governance)
     enabled: false                       # default: false
 
-# Spring Boot Actuator (recommended)
+# Spring Boot Actuator & Exporters
 management:
   endpoints:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  
+  # --- Metrics Exporters ---
+  otlp:
+    metrics:
+      export:
+        enabled: true                     # Push to Collector (default)
+        url: http://localhost:4318/v1/metrics
+  
+  prometheus:
+    metrics:
+      export:
+        enabled: true                     # Expose /actuator/prometheus (default)
+
+  # dynatrace:                            # Uncomment for Native Export
+  #   metrics:
+  #     export:
+  #       enabled: true
+  #       uri: https://{env}.live.dynatrace.com
+  #       api-token: {token}
+
   tracing:
     enabled: true
+
 ```
 
 ### Feature Toggle Summary

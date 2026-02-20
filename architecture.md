@@ -114,7 +114,9 @@ sequenceDiagram
     Tracing->>Collector: OTLP traces export
 
     Note over Metrics: Parallel: MeterRegistry records metrics
-    Metrics->>Collector: OTLP metrics export
+    Metrics->>Collector: OTLP metrics export (default)
+    Metrics-->>Prometheus: Scrape /actuator/prometheus (optional)
+    Metrics-->>Dynatrace: Native API export (optional)
 
     Filter->>MDC: MDC.remove("correlation_id")
     Filter->>Client: Response + X-Correlation-Id header
@@ -213,6 +215,17 @@ graph LR
     style App fill:#1d3557,color:#fff
     style Sidecar fill:#457b9d,color:#fff
     style Grafana fill:#e63946,color:#fff
+
+### Alternative: Direct / Native Export
+For environments where a sidecar is not possible, or when using vendor-specific agents (e.g., Dynatrace OneAgent):
+
+```mermaid
+graph LR
+    App["Spring Boot App"]
+    
+    App -->|Scrape| Prometheus
+    App -.->|Native API| Dynatrace
+```
 ```
 
 **Key architectural decision:** Application exports OTLP to a **local** Collector sidecar — never directly to backends. This decouples the app from backend choices and allows buffering, retries, and sampling at the Collector layer.

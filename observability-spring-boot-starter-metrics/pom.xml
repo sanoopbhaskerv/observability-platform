@@ -39,5 +39,12 @@
       <groupId>io.micrometer</groupId>
       <artifactId>micrometer-registry-prometheus</artifactId>
     </dependency>
+
+    <!-- Micrometer registry for Dynatrace (Native) -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-dynatrace</artifactId>
+      <optional>true</optional>
+    </dependency>
   </dependencies>
 </project>

@@ -30,9 +30,28 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+
+  # --- Metrics Exporters ---
+
+  # 1. OTLP (Push) - Default
   otlp:
     metrics:
       export:
+        enabled: true
         url: http://localhost:4318/v1/metrics
     tracing:
       endpoint: http://localhost:4318/v1/traces
+
+  # 2. Prometheus (Pull) - Enabled by micrometer-registry-prometheus
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+  # 3. Dynatrace (Native) - Uncomment to enable
+  # dynatrace:
+  #   metrics:
+  #     export:
+  #       enabled: true
+  #       uri: https://{your-env-id}.live.dynatrace.com
+  #       api-token: {your-api-token}
